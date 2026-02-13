@@ -1,0 +1,16 @@
+---
+title: "week3b"
+author: "Zihao Yu"
+format: html
+editor: visual
+---
+
+# 1.How will I tackle the problem.
+
+I will begin by studying two examples, then select a dataset and complete the assignment according to the instructions.
+
+# 2.What data challenges do I may anticipate?
+
+I may run into datasets of poor quality, such as missing dates, values with NA, or anomalies.
+
+source: "https://raw.githubusercontent.com/XxY-coder/data607-week3b/refs/heads/main/stocks.csv"3
