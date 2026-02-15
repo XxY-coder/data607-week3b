@@ -5,12 +5,102 @@ format: html
 editor: visual
 ---
 
-# 1.How will I tackle the problem.
-
 I will begin by studying two examples, then select a dataset and complete the assignment according to the instructions.
 
 # 2.What data challenges do I may anticipate?
 
 I may run into datasets of poor quality, such as missing dates, values with NA, or anomalies.
 
-source: "https://raw.githubusercontent.com/XxY-coder/data607-week3b/refs/heads/main/stocks.csv"3
+source: "https://raw.githubusercontent.com/XxY-coder/data607-week3b/refs/heads/main/stocks.csv"
+
+# 3. Clean up the data.
+
+It has 4 different types of tickers.
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+
+
+stock_raw <- read.csv("https://raw.githubusercontent.com/XxY-coder/data607-week3b/refs/heads/main/stocks.csv")
+names(stock_raw)
+
+stock_raw |>
+  distinct(Ticker) |>
+  count()
+
+stock_raw |>
+  summarise(
+    min_date = min(as.Date(Date), na.rm = TRUE),
+    max_date = max(as.Date(Date), na.rm = TRUE)
+  )
+
+stocks <- 
+  stock_raw |>
+  transmute(
+    Ticker, 
+    date = as.Date(Date),
+    adj_close = as.numeric(Adj.Close)
+) |>
+  arrange(Ticker, date) |>
+  distinct(
+    Ticker, 
+    date, 
+    .keep_all = TRUE
+)
+
+
+```
+
+# 4.Calculate the year-to-date average
+
+```{r}
+stocks <-
+  stocks |>
+  mutate(year = year(date)) |>
+  group_by(Ticker, year) |>
+  arrange(date, .by_group = TRUE) |>
+  mutate(ytd_avg = cummean(adj_close)) |>
+  ungroup()
+
+stocks
+```
+
+# 5.Calculate the six-day moving averages
+
+```{r}
+library(zoo)
+
+stocks <-
+  stocks |>
+  arrange(Ticker, date) |>
+  group_by(Ticker) |>
+  mutate(
+    d6_move = rollmean(adj_close, k = 6, align = "right", fill = NA)
+  ) |>
+  ungroup()
+
+stocks
+
+stocks_f <- stocks |>
+  select(Ticker, date, adj_close, ytd_avg, d6_move)
+
+view(stocks_f)
+
+```
+
+# 6.Conclusion
+
+Four stocks increase slowly between February and May. AAPL and GOOG displayed relatively smoother upward trends; MSFT initially declined slightly but then rise ; NFLX exhibited high volatility and an unstable. Overall, NFLX reached the highest range, while GOOG reached the lowest.
+
+```{r}
+
+ggplot(
+  stocks_f,
+  aes(x = date, y = d6_move, color = Ticker, group = Ticker)
+) +
+  geom_line(na.rm = TRUE) +
+  labs(x = "Date", y = "6-day Moving Average", color = "Ticker")
+```
+
